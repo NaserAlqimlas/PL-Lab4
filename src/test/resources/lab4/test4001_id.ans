@@ -1,0 +1,6 @@
+# Type checking ...
+## number
+# Stepping ...
+##    0: Call(Function(None,List((x,MTyp(Const,TNumber))),None,Var(x)),List(N(4.0)))
+##    1: N(4.0)
+4.0

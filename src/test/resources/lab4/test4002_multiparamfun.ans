@@ -1,0 +1,8 @@
+# Type checking ...
+## number
+# Stepping ...
+##    0: Call(Function(None,List((x,MTyp(Const,TNumber)), (y,MTyp(Const,TBool))),None,If(Var(y),Binary(Plus,Var(x),N(1.0)),Binary(Minus,Var(x),N(1.0)))),List(N(4.0), B(true)))
+##    1: If(B(true),Binary(Plus,N(4.0),N(1.0)),Binary(Minus,N(4.0),N(1.0)))
+##    2: Binary(Plus,N(4.0),N(1.0))
+##    3: N(5.0)
+5.0

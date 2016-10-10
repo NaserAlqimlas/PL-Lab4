@@ -1,0 +1,6 @@
+# Type checking ...
+## { a: number; b: number }
+# Stepping ...
+##    0: Obj(Map(a -> N(5.0), b -> N(2.0)))
+{ a: 5.0,
+  b: 2.0 }

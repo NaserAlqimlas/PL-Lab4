@@ -1,0 +1,2 @@
+const n = 1;
+(function f(n: number): number { return n === 0 ? 0 : f(n - 1) })(1)

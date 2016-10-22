@@ -114,7 +114,7 @@ object Parser extends TokenParser {
 
   def mode: Parser[Mode] =
     "const" ^^ { _ => Const } |
-    "name" ^^ { _ => Const }
+    "name" ^^ { _ => Name }
 
   def expr: Parser[Expr] =
     seq

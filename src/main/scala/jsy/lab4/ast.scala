@@ -6,7 +6,6 @@
 package jsy.lab4
 
 import scala.util.parsing.input.Positional
-import scala.collection.immutable.TreeMap
 
 /**
  * @author Bor-Yuh Evan Chang
@@ -32,24 +31,24 @@ object ast {
 
   sealed abstract class Uop
   
-  case object Neg extends Uop /* - */
-  case object Not extends Uop /* ! */
+  case object Neg extends Uop /* -e1 */
+  case object Not extends Uop /* !e1 */
 
   sealed abstract class Bop
   
-  case object Plus extends Bop /* + */
-  case object Minus extends Bop /* - */
-  case object Times extends Bop /* * */
-  case object Div extends Bop /* / */
-  case object Eq extends Bop /* === */
-  case object Ne extends Bop /* !=== */
-  case object Lt extends Bop /* < */
-  case object Le extends Bop /* <= */
-  case object Gt extends Bop /* > */
-  case object Ge extends Bop /* >= */
+  case object Plus extends Bop /* e1 + e2 */
+  case object Minus extends Bop /* e1 - e2 */
+  case object Times extends Bop /* e1 * e2 */
+  case object Div extends Bop /* e1 / e2 */
+  case object Eq extends Bop /* e1 === e2 */
+  case object Ne extends Bop /* e1 !=== e2 */
+  case object Lt extends Bop /* e1 < e2 */
+  case object Le extends Bop /* e1 <= e2 */
+  case object Gt extends Bop /* e1 > e2 */
+  case object Ge extends Bop /* e1 >= e2 */
   
-  case object And extends Bop /* && */
-  case object Or extends Bop /* || */
+  case object And extends Bop /* e1 && e2 */
+  case object Or extends Bop /* e1 || e2 */
   
   case object Seq extends Bop /* , */
   
@@ -73,13 +72,21 @@ object ast {
   case object TBool extends Typ
   case object TString extends Typ
   case object TUndefined extends Typ
-  case class TFunction(params: List[(String,MTyp)], tret: Typ) extends Typ
+  case class TFunction(params: List[(String,MTyp)], tret: Typ) extends Typ {
+    override def equals(other: Any) = other.isInstanceOf[TFunction] && {
+      other match {
+        case TFunction(oparams, otret) if otret == tret && oparams.length == params.length =>
+          (oparams zip params).forall { case ((_, omt), (_, mt)) => omt == mt }
+        case _ => false
+      }
+    }
+  }
   case class TObj(tfields: Map[String, Typ]) extends Typ
 
   /* Parameter Modes */
   sealed abstract class Mode
-  case object Const extends Mode
-  case object Name extends Mode
+  case object MConst extends Mode
+  case object MName extends Mode
 
   /* Parameter Types */
   case class MTyp(m: Mode, t: Typ)
@@ -111,10 +118,10 @@ object ast {
           fields map {
             case (f, S(s)) => f + ": '" + s + "'"
             case (f, v) => f + ": " + pretty(v)
-          } reduceRight {
+          } reduceRightOption {
             (s, acc) => s + ",\n  " + acc
           }
-        "{ %s }".format(pretty_fields)
+        "{ %s }".format(pretty_fields.getOrElse(""))
     }
   }
   
@@ -131,48 +138,73 @@ object ast {
     case TUndefined => "Undefined"
     case TFunction(params, tret) => {
       val pretty_params =
-        params map { case (x,t) => "%s: %s".format(x, pretty(t)) } reduceRight {
+        params map { case (x,mt) => "%s: %s".format(x, pretty(mt)) } reduceRightOption {
           (s, acc) => s + ", " + acc
         }
-      "(%s) => %s".format(pretty_params, pretty(tret))
+      "(%s) => %s".format(pretty_params.getOrElse(""), pretty(tret))
     }
     case TObj(tfields) =>
-      val pretty_fields =
-        tfields map { case (f,t) => "%s: %s".format(f, pretty(t)) } reduceRight {
+      val pretty_fields: Option[String] =
+        tfields map { case (f,t) => "%s: %s".format(f, pretty(t)) } reduceRightOption {
           (s, acc) => s + "; " + acc
         }
-      "{ %s }".format(pretty_fields)
+      "{ %s }".format(pretty_fields.getOrElse(""))
   }
 
   def pretty(mty: MTyp): String = mty match {
-    case MTyp(Const, ty) => s"${pretty(ty)}"
-    case MTyp(Name, ty) => s"name ${pretty(ty)}"
+    case MTyp(MConst, ty) => s"${pretty(ty)}"
+    case MTyp(mode, ty) => s"${pretty(mode)} ${pretty(ty)}"
+  }
+
+  def pretty(mode: Mode): String = mode match {
+    case MConst => "const"
+    case MName => "name"
   }
 
   /* Get the free variables of e. */
-  def freeVars(e: Expr): Set[String] = e match {
-    case Var(x) => Set(x)
-    case Decl(_, x, e1, e2) => freeVars(e1) | (freeVars(e2) - x)
-    case Function(p, params, _, e1) => freeVars(e1) -- (params map { _._1 }) -- p
-    case N(_) | B(_) | Undefined | S(_) => Set.empty
-    case Unary(_, e1) => freeVars(e1)
-    case Binary(_, e1, e2) => freeVars(e1) | freeVars(e2)
-    case If (e1, e2, e3) => freeVars(e1) | freeVars(e2) | freeVars(e3)
-    case Call(e1, args) => freeVars(e1) | args.foldLeft(Set.empty: Set[String]){ (acc: Set[String], ei) => acc | freeVars(ei) }
-    case Print(e1) => freeVars(e1)
-    case Obj(fields) => fields.foldLeft(Set.empty: Set[String]){ (acc: Set[String], p: (String, Expr)) => acc | freeVars(p._2) }
-    case GetField(e1, _) => freeVars(e1)
+  def freeVarsVar(e: Expr): Set[Var] = {
+    def fv(e: Expr): Set[Var] = e match {
+      case vr @ Var(x) => Set(vr)
+      case Decl(_, x, e1, e2) => fv(e1) | (fv(e2) - Var(x))
+      case Function(p, params, _, e1) => {
+        val boundvars = (params map { case (x, _) => Var(x) }) ++ (p map Var)
+        fv(e1) -- boundvars
+      }
+      case N(_) | B(_) | Undefined | S(_) => Set.empty
+      case Unary(_, e1) => fv(e1)
+      case Binary(_, e1, e2) => fv(e1) | fv(e2)
+      case If(e1, e2, e3) => fv(e1) | fv(e2) | fv(e3)
+      case Call(e1, args) => fv(e1) | args.foldLeft(Set.empty: Set[Var]) {
+        ((acc: Set[Var], ei) => acc | fv(ei))
+      }
+      case Print(e1) => fv(e1)
+      case Obj(fields) => fields.foldLeft(Set.empty: Set[Var])({ case (acc, (_, ei)) => acc | fv(ei) })
+      case GetField(e1, _) => fv(e1)
+    }
+    fv(e)
   }
-  
+  def freeVars(e: Expr): Set[String] = freeVarsVar(e) map { case Var(x) => x }
+
   /* Check closed expressions. */
-  def closed(e: Expr): Boolean = freeVars(e).isEmpty
-   
+  def closed(e: Expr): Boolean = freeVarsVar(e).isEmpty
+  def checkClosed(e: Expr): Unit = {
+    freeVarsVar(e).headOption.foreach { x => throw new UnboundVariableError(x) }
+  }
+
+  /*
+   * Unbound Variable Error exception. Throw this exception to signal an unbound variable.
+   */
+  case class UnboundVariableError(x: Var) extends Exception {
+    override def toString =
+      Parser.formatErrorMessage(x.pos, "UnboundVariableError", "unbound variable %s".format(x.x))
+  }
+
   /*
    * Dynamic Type Error exception.  Throw this exception to signal a dynamic
    * type error.
-   * 
+   *
    *   throw DynamicTypeError(e)
-   * 
+   *
    */
   case class DynamicTypeError(e: Expr) extends Exception {
     override def toString = Parser.formatErrorMessage(e.pos, "DynamicTypeError", "in evaluating " + e)
@@ -202,4 +234,10 @@ object ast {
     override def toString = Parser.formatErrorMessage(e.pos, "StuckError", "in evaluating " + e)
   }
   
+  /*
+   * Termination Error exception. Throw this exception to signal exceeding maximum number of allowed steps.
+   */
+  case class TerminationError(e: Expr, n: Int) extends Exception {
+    override def toString = Parser.formatErrorMessage(e.pos, "TerminationError", s"exceeded ${n} steps in evaluating ${e}")
+  }
 }

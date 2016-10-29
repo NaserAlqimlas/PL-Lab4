@@ -55,7 +55,7 @@ class Lab4Spec(lab4: Lab4Like) extends FlatSpec {
 
 }
 
-// An adapter class to pass in your Lab3 object.
+// An adapter class to pass in your Lab4 object.
 class Lab4SpecRunner extends Lab4Spec(jsy.student.Lab4)
 
 // The next bit of code runs a test for each .jsy file in src/test/resources/lab4.

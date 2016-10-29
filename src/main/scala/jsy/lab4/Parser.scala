@@ -113,14 +113,14 @@ object Parser extends TokenParser {
     }
 
   def mode: Parser[Mode] =
-    "const" ^^ { _ => Const } |
-    "name" ^^ { _ => Name }
+    "const" ^^ { _ => MConst } |
+    "name" ^^ { _ => MName }
 
   def expr: Parser[Expr] =
     seq
     
   def seq: Parser[Expr] =
-    cond ~ withposrep("," ~> cond) ^^ {
+    noseq ~ withposrep("," ~> noseq) ^^ {
       case e0 ~ es => 
         (es :\ (None: Option[(Position,Expr)])){
           case ((posi,ei), None) => Some(posi,ei)
@@ -130,9 +130,12 @@ object Parser extends TokenParser {
           case Some((pos,e)) => seqExpr(e0, e) setPos pos
         }
     }
+
+  def noseq: Parser[Expr] =
+    cond
   
   def cond: Parser[Expr] =
-    binary(0) ~ opt(withpos(("?" ~> cond) ~ (":" ~> cond))) ^^ {
+    binary(0) ~ opt(withpos(("?" ~> noseq) ~ (":" ~> noseq))) ^^ {
       case e1 ~ None => e1
       case e1 ~ Some((pos, e2 ~ e3)) => If(e1, e2, e3) setPos pos
     }
@@ -180,12 +183,13 @@ object Parser extends TokenParser {
     "!" ^^ (_ => (e: Expr) => Unary(Not, e))
     
   def call: Parser[Expr] =
-    term ~ withposrep("." ~> ident) ~ withposrep("(" ~> repsep(cond, ",") <~ ")") ^^ {
-      case e0 ~ derefs ~ apps =>
-        val e_derefs = (e0 /: derefs){ case (acc, (posi,fi)) => GetField(acc, fi) setPos posi }
-        val e_calls = (e_derefs /: apps){ case (acc, (posi,argsi)) => Call(acc, argsi) setPos posi }
-        e_calls
-    }
+    term ~ rep(callop | derefop) ^^ { case e0 ~ callderefs => (e0 /: callderefs){ case (acc, mk) => mk(acc) } }
+
+  def callop: Parser[Expr => Expr] =
+    withpos("(" ~> repsep(noseq, ",") <~ ")") ^^ { case (pos, args) => (e0 => Call(e0, args) setPos pos) }
+
+  def derefop: Parser[Expr => Expr] =
+    withpos("." ~> ident) ^^ { case (pos,f) => (e0 => GetField(e0, f) setPos pos) }
 
   def term: Parser[Expr] =
     positioned(
@@ -198,9 +202,10 @@ object Parser extends TokenParser {
       ("jsy" ~ "." ~ "print") ~> "(" ~> expr <~ ")" ^^ (e => Print(e)) |
       ("console" ~ "." ~ "log") ~> "(" ~> expr <~ ")" ^^ (e => Print(e)) |
       function |
-      record(",", Obj, cond)
+      record(",", Obj, noseq)
     ) |
     "(" ~> expr <~ ")" |
+    "{" ~> "{" ~> prog <~ "}" <~ "}" |
     failure("atomic expression expected")
     
   def function: Parser[Expr] =
@@ -209,7 +214,7 @@ object Parser extends TokenParser {
         val body = stmts(Some(ret))
         Function(f, params, retty, body)
     } |
-    ("(" ~> rep(colonpair(modety)) <~ ")") ~ (withpos("=>" ~> cond)) ^^ {
+    ("(" ~> repsep(colonpair(modety), ",") <~ ")") ~ (withpos("=>" ~> noseq)) ^^ {
       case params ~ ((pos, body)) => Function(None, params, None, body) setPos pos
     }
         
@@ -247,7 +252,7 @@ object Parser extends TokenParser {
 
   def modety: Parser[MTyp] =
     mode ~ ty ^^ { case mode ~ ty => MTyp(mode, ty) } |
-    ty ^^ { case ty => MTyp(Const, ty) }
+    ty ^^ { case ty => MTyp(MConst, ty) }
 
   def withpos[T](q: => Parser[T]): Parser[(Position, T)] = Parser { in =>
     q(in) match {

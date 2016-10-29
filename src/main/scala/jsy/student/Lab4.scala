@@ -197,7 +197,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
   }
 
   /* Rename bound variables in e */
-  def rename(e: Expr)(renameVar: String => String): Expr = {
+  def rename(e: Expr)(fresh: String => String): Expr = {
     def ren(env: Map[String,String], e: Expr): Expr = {
       e match {
         case N(_) | B(_) | Undefined | S(_) => e
@@ -210,7 +210,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
         case Var(y) =>
           ???
         case Decl(mode, y, e1, e2) =>
-          val yp = renameVar(y)
+          val yp = fresh(y)
           ???
 
         case Function(p, params, retty, e1) => {
@@ -230,13 +230,13 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
         case GetField(e1, f) => ???
       }
     }
-    ren(Map.empty, e)
+    ren(empty, e)
   }
 
   /* Check whether or not an expression is reduced enough to be applied given a mode. */
   def isRedex(mode: Mode, e: Expr): Boolean = mode match {
-    case Const => ???
-    case Name => ???
+    case MConst => ???
+    case MName => ???
   }
 
   def step(e: Expr): Expr = {

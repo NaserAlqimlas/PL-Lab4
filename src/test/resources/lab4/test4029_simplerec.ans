@@ -1,13 +1,11 @@
-# Type checking ...
-## number
-# Stepping ...
-##    0: Decl(Const,n,N(1.0),Call(Function(Some(f),List((n,MTyp(Const,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(N(1.0))))
-##    1: Call(Function(Some(f),List((n,MTyp(Const,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(N(1.0)))
-##    2: If(Binary(Eq,N(1.0),N(0.0)),N(0.0),Call(Function(Some(f),List((n,MTyp(Const,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(Binary(Minus,N(1.0),N(1.0)))))
-##    3: If(B(false),N(0.0),Call(Function(Some(f),List((n,MTyp(Const,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(Binary(Minus,N(1.0),N(1.0)))))
-##    4: Call(Function(Some(f),List((n,MTyp(Const,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(Binary(Minus,N(1.0),N(1.0))))
-##    5: Call(Function(Some(f),List((n,MTyp(Const,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(N(0.0)))
-##    6: If(Binary(Eq,N(0.0),N(0.0)),N(0.0),Call(Function(Some(f),List((n,MTyp(Const,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(Binary(Minus,N(0.0),N(1.0)))))
-##    7: If(B(true),N(0.0),Call(Function(Some(f),List((n,MTyp(Const,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(Binary(Minus,N(0.0),N(1.0)))))
-##    8: N(0.0)
+## Decl(MConst,n,N(1.0),Call(Function(Some(f),List((n,MTyp(MConst,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(N(1.0)))) : number
+## step    0: Decl(MConst,n,N(1.0),Call(Function(Some(f),List((n,MTyp(MConst,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(N(1.0))))
+## step    1: Call(Function(Some(f),List((n,MTyp(MConst,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(N(1.0)))
+## step    2: If(Binary(Eq,N(1.0),N(0.0)),N(0.0),Call(Function(Some(f),List((n,MTyp(MConst,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(Binary(Minus,N(1.0),N(1.0)))))
+## step    3: If(B(false),N(0.0),Call(Function(Some(f),List((n,MTyp(MConst,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(Binary(Minus,N(1.0),N(1.0)))))
+## step    4: Call(Function(Some(f),List((n,MTyp(MConst,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(Binary(Minus,N(1.0),N(1.0))))
+## step    5: Call(Function(Some(f),List((n,MTyp(MConst,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(N(0.0)))
+## step    6: If(Binary(Eq,N(0.0),N(0.0)),N(0.0),Call(Function(Some(f),List((n,MTyp(MConst,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(Binary(Minus,N(0.0),N(1.0)))))
+## step    7: If(B(true),N(0.0),Call(Function(Some(f),List((n,MTyp(MConst,TNumber))),Some(TNumber),If(Binary(Eq,Var(n),N(0.0)),N(0.0),Call(Var(f),List(Binary(Minus,Var(n),N(1.0)))))),List(Binary(Minus,N(0.0),N(1.0)))))
+## value: N(0.0)
 0.0

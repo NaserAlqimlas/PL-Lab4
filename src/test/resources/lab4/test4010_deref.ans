@@ -1,6 +1,4 @@
-# Type checking ...
-## number
-# Stepping ...
-##    0: GetField(Obj(Map(f -> N(3.0))),f)
-##    1: N(3.0)
+## GetField(Obj(Map(f -> N(3.0))),f) : number
+## step    0: GetField(Obj(Map(f -> N(3.0))),f)
+## value: N(3.0)
 3.0

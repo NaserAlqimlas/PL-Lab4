@@ -81,7 +81,18 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
 
   def strictlyOrdered(t: Tree): Boolean = {
     val (b, _) = foldLeft(t)((true, None: Option[Int])){
-      ???
+      (b, d) => if (b._1) {
+        b._2 match {
+          case None => {
+            (true, Some(d))
+          }
+          case Some(x) => {
+            (d > x, Some(d))
+          }
+        }
+      } else {
+        (false, None)
+      }
     }
     b
   }
@@ -172,8 +183,26 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
     require(isValue(v1), s"inequalityVal: v1 ${v1} is not a value")
     require(isValue(v2), s"inequalityVal: v2 ${v2} is not a value")
     require(bop == Lt || bop == Le || bop == Gt || bop == Ge)
+
     (v1, v2) match {
       case _ => ???
+
+    ((v1, v2): @unchecked) match {
+     /* case (S(s1), S(s2))=>
+        (bop: @unchecked) match {
+          case Lt => s1 < s2
+          case Le => s1 <= s2
+          case Gt => s1 > s2
+          case Ge => s1 >= s2
+        } */
+      case (N(n1), N(n2)) =>
+        (bop: @unchecked) match {
+          case Lt => n1 < n2
+          case Le => n1 <= n2
+          case Gt => n1 > n2
+          case Ge => n1 >= n2
+        }
+
     }
   }
 
@@ -189,10 +218,10 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case N(_) | B(_) | Undefined | S(_) => e
       case Print(e1) => Print(substitute(e1, esub, x))
         /***** Cases from Lab 3 */
-      case Unary(uop, e1) => ???
-      case Binary(bop, e1, e2) => ???
-      case If(e1, e2, e3) => ???
-      case Var(y) => ???
+      case Unary(uop, e1) =>  Unary(uop, substitute(e1, esub, x))
+      case Binary(bop, e1, e2) => Binary(bop, substitute(e1, esub, x), substitute(e2, esub, x))
+      case If(e1, e2, e3) => If(substitute(e1, esub, x), substitute(e2, esub, x), substitute(e3, esub, x))
+      case Var(y) => if (y==x) esub else Var(y)
       case Decl(mode, y, e1, e2) => ???
         /***** Cases needing adapting from Lab 3 */
       case Function(p, params, tann, e1) =>
@@ -258,6 +287,18 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Print(v1) if isValue(v1) => println(pretty(v1)); Undefined
         /***** Cases needing adapting from Lab 3. */
       case Unary(Neg, v1) if isValue(v1) => ???
+      case Unary(Not, B(b1)) => B(!b1)
+      case Binary(bop @ (Lt|Le|Gt|Ge), v1, v2) if isValue(v1) && isValue(v2) => B(inequalityVal(bop, v1, v2))
+      case Binary(Seq, v1, e2) if isValue(v1) => e2
+      case Binary(Plus, S(s1), S(s2)) => S(s1+s1)
+      case Binary(Plus, N(n1), N(n2)) => N(n1+n2)
+      case Binary(Eq, v1, v2) if isValue(v1) && isValue(v2) => B(v1 == v2)
+      case Binary(Ne, v1, v2) if isValue(v1) && isValue(v2) => B(v1 != v2)
+      case Binary(And, B(b1), e2) => if (b1) e2 else B(false)
+      case Binary(Or, B(b1), e2) => if (b1) B(true) else B(false)
+      //case ConstDecl(x, e1, e2) if isValue(e1) => substitute(e2, e1, x)
+
+
         /***** More cases here */
       case Call(v1, args) if isValue(v1) =>
         v1 match {
@@ -286,7 +327,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       /* Inductive Cases: Search Rules */
       case Print(e1) => Print(step(e1))
         /***** Cases from Lab 3. */
-      case Unary(uop, e1) => ???
+      case Unary(uop, e1) => Unary(uop, step(e1))
         /***** More cases here */
         /***** Cases needing adapting from Lab 3 */
       case Call(v1 @ Function(_, _, _, _), args) => ???

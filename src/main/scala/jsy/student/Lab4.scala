@@ -53,8 +53,11 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
   }
   
   def mapFirst[A](l: List[A])(f: A => Option[A]): List[A] = l match {
-    case Nil => ???
-    case h :: t => ???
+    case Nil => Nil
+    case h :: t => f(h) match{
+      case None => h::mapFirst(t)(f)
+      case Some(thing) => thing::t
+    }
   }
   
   /* Trees */
@@ -168,8 +171,22 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
     require(isValue(v1), s"inequalityVal: v1 ${v1} is not a value")
     require(isValue(v2), s"inequalityVal: v2 ${v2} is not a value")
     require(bop == Lt || bop == Le || bop == Gt || bop == Ge)
-    (v1, v2) match {
-      case _ => ???
+    ((v1, v2): @unchecked) match {
+     /* case (S(s1), S(s2))=>
+        (bop: @unchecked) match {
+          case Lt => s1 < s2
+          case Le => s1 <= s2
+          case Gt => s1 > s2
+          case Ge => s1 >= s2
+        } */
+      case (N(n1), N(n2)) =>
+        (bop: @unchecked) match {
+          case Lt => n1 < n2
+          case Le => n1 <= n2
+          case Gt => n1 > n2
+          case Ge => n1 >= n2
+        }
+    }
   }
 
   /* This should be the same code as from Lab 3 */
@@ -184,10 +201,10 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case N(_) | B(_) | Undefined | S(_) => e
       case Print(e1) => Print(substitute(e1, esub, x))
         /***** Cases from Lab 3 */
-      case Unary(uop, e1) => ???
-      case Binary(bop, e1, e2) => ???
-      case If(e1, e2, e3) => ???
-      case Var(y) => ???
+      case Unary(uop, e1) =>  Unary(uop, substitute(e1, esub, x))
+      case Binary(bop, e1, e2) => Binary(bop, substitute(e1, esub, x), substitute(e2, esub, x))
+      case If(e1, e2, e3) => If(substitute(e1, esub, x), substitute(e2, esub, x), substitute(e3, esub, x))
+      case Var(y) => if (y==x) esub else Var(y)
       case Decl(mode, y, e1, e2) => ???
         /***** Cases needing adapting from Lab 3 */
       case Function(p, params, tann, e1) =>
@@ -253,6 +270,9 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Print(v1) if isValue(v1) => println(pretty(v1)); Undefined
         /***** Cases needing adapting from Lab 3. */
       case Unary(Neg, v1) if isValue(v1) => ???
+      case Unary(Not, B(b1)) => B(!b1)
+      case Binary(bop @ (Lt|Le|Gt|Ge), v1, v2) if isValue(v1) && isValue(v2) => B(inequalityVal(bop, v1, v2))
+
         /***** More cases here */
       case Call(v1, args) if isValue(v1) =>
         v1 match {

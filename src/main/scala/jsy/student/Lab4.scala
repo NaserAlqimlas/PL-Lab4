@@ -80,7 +80,18 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
 
   def strictlyOrdered(t: Tree): Boolean = {
     val (b, _) = foldLeft(t)((true, None: Option[Int])){
-      ???
+      (b, d) => if (b._1) {
+        b._2 match {
+          case None => {
+            (true, Some(d))
+          }
+          case Some(x) => {
+            (d > x, Some(d))
+          }
+        }
+      } else {
+        (false, None)
+      }
     }
     b
   }
@@ -272,6 +283,15 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Unary(Neg, v1) if isValue(v1) => ???
       case Unary(Not, B(b1)) => B(!b1)
       case Binary(bop @ (Lt|Le|Gt|Ge), v1, v2) if isValue(v1) && isValue(v2) => B(inequalityVal(bop, v1, v2))
+      case Binary(Seq, v1, e2) if isValue(v1) => e2
+      case Binary(Plus, S(s1), S(s2)) => S(s1+s1)
+      case Binary(Plus, N(n1), N(n2)) => N(n1+n2)
+      case Binary(Eq, v1, v2) if isValue(v1) && isValue(v2) => B(v1 == v2)
+      case Binary(Ne, v1, v2) if isValue(v1) && isValue(v2) => B(v1 != v2)
+      case Binary(And, B(b1), e2) => if (b1) e2 else B(false)
+      case Binary(Or, B(b1), e2) => if (b1) B(true) else B(false)
+      //case ConstDecl(x, e1, e2) if isValue(e1) => substitute(e2, e1, x)
+
 
         /***** More cases here */
       case Call(v1, args) if isValue(v1) =>
@@ -301,7 +321,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       /* Inductive Cases: Search Rules */
       case Print(e1) => Print(step(e1))
         /***** Cases from Lab 3. */
-      case Unary(uop, e1) => ???
+      case Unary(uop, e1) => Unary(uop, step(e1))
         /***** More cases here */
         /***** Cases needing adapting from Lab 3 */
       case Call(v1 @ Function(_, _, _, _), args) => ???

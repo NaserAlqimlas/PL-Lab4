@@ -65,8 +65,8 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
 
   def foldLeft[A](t: Tree)(z: A)(f: (A, Int) => A): A = {
     def loop(acc: A, t: Tree): A = t match {
-      case Empty => ???
-      case Node(l, d, r) => ???
+      case Empty => 0
+      case Node(l, d, r) => f(loop(acc,l),d)
     }
     loop(z, t)
   }

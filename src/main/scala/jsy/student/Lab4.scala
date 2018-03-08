@@ -59,7 +59,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Some(thing) => thing::t
     }
   }
-  
+
   
   /* Trees */
 
@@ -174,6 +174,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
     require(bop == Lt || bop == Le || bop == Gt || bop == Ge)
     (v1, v2) match {
       case _ => ???
+    }
   }
 
   /* This should be the same code as from Lab 3 */

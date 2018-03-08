@@ -38,12 +38,18 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
   /* Lists */
   
   def compressRec[A](l: List[A]): List[A] = l match {
-    case Nil | _ :: Nil => ???
-    case h1 :: (t1 @ (h2 :: _)) => ???
+    case Nil | _ :: Nil => l
+    case h1 :: (t1 @ (h2 :: _)) =>
+      val newL = compressRec(t1)
+      if (h1 == h2) newL
+      else h1::newL
   }
-  
+
   def compressFold[A](l: List[A]): List[A] = l.foldRight(Nil: List[A]){
-    (h, acc) => ???
+    (h, acc) => acc match {
+      case(h1::h2) if h==h2 => acc
+      case _ => h::acc
+    }
   }
   
   def mapFirst[A](l: List[A])(f: A => Option[A]): List[A] = l match {
@@ -156,13 +162,14 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
    *
    * This should the same code as from Lab 3.
    */
+
+
   def inequalityVal(bop: Bop, v1: Expr, v2: Expr): Boolean = {
     require(isValue(v1), s"inequalityVal: v1 ${v1} is not a value")
     require(isValue(v2), s"inequalityVal: v2 ${v2} is not a value")
     require(bop == Lt || bop == Le || bop == Gt || bop == Ge)
     (v1, v2) match {
-      case _ => ??? // delete this line when done
-    }
+      case _ => ???
   }
 
   /* This should be the same code as from Lab 3 */

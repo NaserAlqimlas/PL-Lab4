@@ -146,9 +146,11 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
         case (tgot, tgot1) => err(tgot, e1)
       }
       case Binary(Seq, e1, e2) =>
-        ???
-      case If(e1, e2, e3) =>
-        ???
+        typeof(env, e2)
+      case If(e1, e2, e3) => (typeof(env, e1), typeof(env, e2), typeof(env, e3)) match {
+        case (TBool, t2, t3) => if (t2 == t3) t2 else err(t3, e3) //return error e1
+        case (tgot, _, _) => err(tgot, e1)
+      }
       case Function(p, params, tann, e1) => {
         // Bind to env1 an environment that extends env with an appropriate binding if
         // the function is potentially recursive.

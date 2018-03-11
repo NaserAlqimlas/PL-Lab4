@@ -79,12 +79,10 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
     val (b, _) = foldLeft(t)((true, None: Option[Int])){
       (b, d) => if (b._1) {
         b._2 match {
-          case None => {
+          case None =>
             (true, Some(d))
-          }
-          case Some(x) => {
+          case Some(x) =>
             (d > x, Some(d))
-          }
         }
       } else {
         (false, None)

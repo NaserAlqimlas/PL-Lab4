@@ -56,6 +56,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Some(thing) => thing::t
     }
   }
+
   
   /* Trees */
 
@@ -194,6 +195,10 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
     require(isValue(v1), s"inequalityVal: v1 ${v1} is not a value")
     require(isValue(v2), s"inequalityVal: v2 ${v2} is not a value")
     require(bop == Lt || bop == Le || bop == Gt || bop == Ge)
+
+    (v1, v2) match {
+      case _ => ???
+    }
     ((v1, v2): @unchecked) match {
      /*case (S(s1), S(s2))=>
         (bop: @unchecked) match {
@@ -209,6 +214,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
           case Gt => n1 > n2
           case Ge => n1 >= n2
         }
+
     }
   }
 

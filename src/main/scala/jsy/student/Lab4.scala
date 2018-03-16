@@ -153,13 +153,16 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
         // Bind to env1 an environment that extends env with an appropriate binding if
         // the function is potentially recursive.
         val env1 = (p, tann) match {
-          /***** Add cases here *****/
+          case (Some(f), Some(tret)) =>
+            val tsh = TFunction(params, tret)
+            env + (f -> tsh)
+          case (None, _) => env
           case _ => err(TUndefined, e1)
         }
         // Bind to env2 an environment that extends env1 with bindings for params.
-        val env2 = ???
+        val env2 = env1 ++ params
         // Infer the type of the function body
-        val t1 = ???
+        val t1 = ??? // idk what to do here
         // Check with the possibly annotated return type
         ???
       }
@@ -171,8 +174,14 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
           tret
         case tgot => err(tgot, e1)
       }
-      case Obj(fields) => ???
-      case GetField(e1, f) => ???
+      case Obj(fields) => TObj(fields.mapValues((exp: Expr) => typeof(env, exp)))
+      case GetField(e1, f) => typeof(env, e1) match {
+        case TObj(rf) => rf.get(f) match {
+          case Some(x) =>  x
+          case None =>  err(typeof(env, e1), e1)
+        }
+        case _ => err(typeof(env, e1), e1)
+      }
     }
   }
   
@@ -234,11 +243,15 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Decl(mode, y, e1, e2) => ???
         /***** Cases needing adapting from Lab 3 */
       case Function(p, params, tann, e1) =>
-        ???
+        if (params.exists((t1: (String, MTyp)) => t1._1 == x) || Some(x) == p){
+          e
+        } else {
+          Function(p, params, tann, subst(e1))
+        }
       case Call(e1, args) => ???
         /***** New cases for Lab 4 */
       case Obj(fields) => ???
-      case GetField(e1, f) => ???
+      case GetField(e1, f) => GetField(subst(e1), f)
     }
 
     val fvs = freeVars(???)
@@ -305,6 +318,9 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Binary(Ne, v1, v2) if isValue(v1) && isValue(v2) => B(v1 != v2)
       case Binary(And, B(b1), e2) => if (b1) e2 else B(false)
       case Binary(Or, B(b1), e2) => if (b1) B(true) else B(false)
+      case If(B(true), e2, e3) => e2
+      case If(B(false), e2, e3) => e3
+      case If(e1, e2, e3) => If(step(e1), e2, e3)
       //case ConstDecl(x, e1, e2) if isValue(e1) => substitute(e2, e1, x)
 
 
@@ -345,7 +361,11 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Call(v1 @ Function(_, _, _, _), args) => ???
       case Call(e1, args) => ???
         /***** New cases for Lab 4. */
-
+      case GetField(Obj(fields), f) => fields.get(f) match {
+        case Some(e) => e
+        case None => throw StuckError(e)
+      }
+      case GetField(e1, f) => GetField(step(e1), f)
       /* Everything else is a stuck error. Should not happen if e is well-typed.
        *
        * Tip: you might want to first develop by comment out the following line to see which

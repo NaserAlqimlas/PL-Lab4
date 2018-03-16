@@ -114,7 +114,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Undefined => TUndefined
       case S(_) => TString
       case Var(x) => env(x)
-      case Decl(mode, x, e1, e2) => ???
+      case Decl(mode, x, e1, e2) => typeof(extend(env, x, typeof(env, e1)),e2) //Tenv extended with x mapping to type of e1, then type of e2 evaluated and returned.
       case Unary(Neg, e1) => typeof(env, e1) match {
         case TNumber => TNumber
         case tgot => err(tgot, e1)
@@ -147,9 +147,13 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
         case (tgot, tgot1) => err(tgot, e1)
       }
       case Binary(Seq, e1, e2) =>
-        ???
-      case If(e1, e2, e3) =>
-        ???
+        typeof(env, e1)
+        typeof(env,e2)
+      case If(e1, e2, e3) =>typeof(env,e1) match {
+        case TBool=> if (typeof(env,e2)==typeof(env,e3)) typeof(env,e2) else err(typeof(env,e2),e2)
+        case other => err(other, e1)
+      }
+
       case Function(p, params, tann, e1) => {
         // Bind to env1 an environment that extends env with an appropriate binding if
         // the function is potentially recursive.

@@ -111,7 +111,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Undefined => TUndefined
       case S(_) => TString
       case Var(x) => env(x)
-      case Decl(mode, x, e1, e2) => ???
+      case Decl(mode, x, e1, e2) => typeof(extend(env, x, typeof(env, e1)), e2)
       case Unary(Neg, e1) => typeof(env, e1) match {
         case TNumber => TNumber
         case tgot => err(tgot, e1)

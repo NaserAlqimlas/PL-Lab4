@@ -266,10 +266,16 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
         case N(_) | B(_) | Undefined | S(_) => e
         case Print(e1) => Print(ren(env, e1))
 
-        case Unary(uop, e1) => ???
-        case Binary(bop, e1, e2) => ???
-        case If(e1, e2, e3) => ???
+        /*** Not Sure if these are correct, just kinda guessed them ****/
+        case Unary(uop, e1) => Unary(uop, ren(env, e1))
+        case Binary(bop, e1, e2) => Binary(bop, ren(env, e1), e2)
+        case If(e1, e2, e3) => (e1, e2, e3) match {
+          case (B(true), e2, e3) => ren(env, e2)
+          case (B(false), e2, e3) => ren(env, e3)
+          case (e1, e2, e3) => ren(env, e1)
 
+        }
+        /*** End of Not Sure ones, after running through ING these did nothing, no tests passed or failed, still at 20%  ***/
         case Var(y) =>
           ???
         case Decl(mode, y, e1, e2) =>
@@ -298,6 +304,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
 
   /* Check whether or not an expression is reduced enough to be applied given a mode. */
   def isRedex(mode: Mode, e: Expr): Boolean = mode match {
+      // true if reduceable and false if not reduceable
     case MConst => ???
     case MName => ???
   }

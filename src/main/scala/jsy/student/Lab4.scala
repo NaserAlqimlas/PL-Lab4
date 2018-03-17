@@ -276,9 +276,9 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case GetField(e1, f) => GetField(subst(e1), f)
     }
 
-    val fvs = freeVars(???)
-    def fresh(x: String): String = if (???) fresh(x + "$") else x
-    subst(???)
+    val fvs = freeVars(esub)
+    def fresh(x: String): String = if(fvs(x)) fresh(x + "$") else x
+    subst(e)
   }
 
   /* Rename bound variables in e */
@@ -299,15 +299,16 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
         }
         /*** End of Not Sure ones, after running through ING these did nothing, no tests passed or failed, still at 20%  ***/
         case Var(y) =>
-          ???
+          if(env contains(y)) Var(env(y)) else Var(y)  //if y is in the replace string, then replace it else just return the var as is
         case Decl(mode, y, e1, e2) =>
-          val yp = fresh(y)
-          ???
+          val yp = fresh(y) //rename y if necessary
+          val env1 = extend(env, y, yp) //create environment with replacement string
+          Decl(mode, y, ren(env1,e1),ren(env1,e2)) //evaluate e1 and e2 with the renamed y
 
         case Function(p, params, retty, e1) => {
           val (pp, envp): (Option[String], Map[String,String]) = p match {
-            case None => ???
-            case Some(x) => ???
+            case None => (None, env)
+            case Some(x) => (Some(fresh(x)),extend(env, x, fresh(x)))
           }
           val (paramsp, envpp) = params.foldRight( (Nil: List[(String,MTyp)], envp) ) {
             ???
@@ -327,8 +328,8 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
   /* Check whether or not an expression is reduced enough to be applied given a mode. */
   def isRedex(mode: Mode, e: Expr): Boolean = mode match {
       // true if reduceable and false if not reduceable
-    case MConst => ???
-    case MName => ???
+    case MConst => !isValue(e)
+    case MName => false
   }
 
   def step(e: Expr): Expr = {

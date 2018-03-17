@@ -57,7 +57,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
     }
   }
 
-  
+
   /* Trees */
 
   def foldLeft[A](t: Tree)(z: A)(f: (A, Int) => A): A = {
@@ -112,7 +112,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Undefined => TUndefined
       case S(_) => TString
       case Var(x) => env(x)
-        
+
       case Decl(mode, x, e1, e2) => typeof(extend(env, x, typeof(env, e1)),e2) //Tenv extended with x mapping to type of e1, then type of e2 evaluated and returned.
       case Decl(mode, x, e1, e2) => typeof(extend(env, x, typeof(env, e1)), e2)
       case Unary(Neg, e1) => typeof(env, e1) match {
@@ -164,18 +164,24 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
         // Bind to env1 an environment that extends env with an appropriate binding if
         // the function is potentially recursive.
         val env1 = (p, tann) match {
-          case (Some(f), Some(tret)) =>
-            val tsh = TFunction(params, tret)
-            env + (f -> tsh)
+          case (Some(f), Some(tret)) => extend(env,f, TFunction(params,tret))
           case (None, _) => env
           case _ => err(TUndefined, e1)
         }
         // Bind to env2 an environment that extends env1 with bindings for params.
-        val env2 = env1 ++ params
+        val env2 = params.foldLeft(env1) {
+          (aac, singleP) =>
+            val (x, MTyp(_, typ)) = singleP
+            extend(aac, x, typ)
+        }
         // Infer the type of the function body
-        val t1 = ??? // idk what to do here
+        val t1 = typeof(env2,e1)
         // Check with the possibly annotated return type
-        ???
+        tann match{
+          case Some(thing) => if(typeof(env2,e1)==thing) TFunction(params, thing) else err(typeof(env2,e1),e1)
+          case _ => TFunction(params, typeof(env2,e1))
+
+        }
       }
       case Call(e1, args) => typeof(env, e1) match {
         case TFunction(params, tret) if (params.length == args.length) =>

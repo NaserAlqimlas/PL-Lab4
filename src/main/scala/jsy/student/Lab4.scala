@@ -225,13 +225,13 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case _ => ???
     }
     ((v1, v2): @unchecked) match {
-     /*case (S(s1), S(s2))=>
+     case (S(s1), S(s2))=>
         (bop: @unchecked) match {
           case Lt => s1 < s2
           case Le => s1 <= s2
           case Gt => s1 > s2
           case Ge => s1 >= s2
-        }*/
+        }
       case (N(n1), N(n2)) =>
         (bop: @unchecked) match {
           case Lt => n1 < n2
@@ -262,7 +262,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Binary(bop, e1, e2) => Binary(bop, substitute(e1, esub, x), substitute(e2, esub, x))
       case If(e1, e2, e3) => If(substitute(e1, esub, x), substitute(e2, esub, x), substitute(e3, esub, x))
       case Var(y) => if (y==x) esub else Var(y)
-      case Decl(mode, y, e1, e2) => ???
+      case Decl(mode, y, e1, e2) => Decl(mode, y, substitute(e1, esub, x), substitute(e2, esub, x)) //no clue if this is right
         /***** Cases needing adapting from Lab 3 */
       case Function(p, params, tann, e1) =>
         if (params.exists((t1: (String, MTyp)) => t1._1 == x) || Some(x) == p){
@@ -288,10 +288,16 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
         case N(_) | B(_) | Undefined | S(_) => e
         case Print(e1) => Print(ren(env, e1))
 
-        case Unary(uop, e1) => ???
-        case Binary(bop, e1, e2) => ???
-        case If(e1, e2, e3) => ???
+        /*** Not Sure if these are correct, just kinda guessed them ****/
+        case Unary(uop, e1) => Unary(uop, ren(env, e1))
+        case Binary(bop, e1, e2) => Binary(bop, ren(env, e1), e2)
+        case If(e1, e2, e3) => (e1, e2, e3) match {
+          case (B(true), e2, e3) => ren(env, e2)
+          case (B(false), e2, e3) => ren(env, e3)
+          case (e1, e2, e3) => ren(env, e1)
 
+        }
+        /*** End of Not Sure ones, after running through ING these did nothing, no tests passed or failed, still at 20%  ***/
         case Var(y) =>
           ???
         case Decl(mode, y, e1, e2) =>
@@ -320,6 +326,7 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
 
   /* Check whether or not an expression is reduced enough to be applied given a mode. */
   def isRedex(mode: Mode, e: Expr): Boolean = mode match {
+      // true if reduceable and false if not reduceable
     case MConst => ???
     case MName => ???
   }
@@ -336,13 +343,15 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Binary(Seq, v1, e2) if isValue(v1) => e2
       case Binary(Plus, S(s1), S(s2)) => S(s1+s1)
       case Binary(Plus, N(n1), N(n2)) => N(n1+n2)
+      case Binary(Minus, N(n1), N(n2)) => N(n1-n2)
+      case Binary(Times, N(n1), N(n2)) => N(n1*n2)
+      case Binary(Div, N(n1), N(n2)) => N(n1/n2)
       case Binary(Eq, v1, v2) if isValue(v1) && isValue(v2) => B(v1 == v2)
       case Binary(Ne, v1, v2) if isValue(v1) && isValue(v2) => B(v1 != v2)
       case Binary(And, B(b1), e2) => if (b1) e2 else B(false)
       case Binary(Or, B(b1), e2) => if (b1) B(true) else B(false)
       case If(B(true), e2, e3) => e2
       case If(B(false), e2, e3) => e3
-      case If(e1, e2, e3) => If(step(e1), e2, e3)
       //case ConstDecl(x, e1, e2) if isValue(e1) => substitute(e2, e1, x)
 
 
@@ -351,13 +360,13 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
         v1 match {
           case Function(p, params, _, e1) => {
             val pazip = params zip args
-            if (???) {
+            if (isValue(v1)) {
               val e1p = pazip.foldRight(e1) {
-                ???
+                case (((x, _), arg_value), eprev) => substitute(eprev, arg_value, x)
               }
               p match {
-                case None => ???
-                case Some(x1) => ???
+                case None => e1p
+                case Some(y) => substitute(e1p, v1, y)
               }
             }
             else {
@@ -375,17 +384,18 @@ object Lab4 extends jsy.util.JsyApplication with Lab4Like {
       case Print(e1) => Print(step(e1))
         /***** Cases from Lab 3. */
       case Unary(uop, e1) => Unary(uop, step(e1))
+      case Binary(bop, v1, e2) if isValue(v1) => Binary(bop, v1, step(e2))
       case Binary(bop, e1, e2) => Binary(bop, step(e1), e2)
       case If(e1, e2, e3) => If(step(e1), e2, e3)
       //case ConstDecl(x, e1, e2) => ConstDecl(x, step(e1), e2)
         /***** More cases here */
         /***** Cases needing adapting from Lab 3 */
       case Call(v1 @ Function(_, _, _, _), args) => ???
-      case Call(e1, args) => ???
+      case Call(e1, args) if isValue(e1) => Call(step(e1), args) //not sure about this one
         /***** New cases for Lab 4. */
       case GetField(Obj(fields), f) => fields.get(f) match {
         case Some(e) => e
-        case None => throw StuckError(e)
+        case None => throw new StuckError(e)
       }
       case GetField(e1, f) => GetField(step(e1), f)
       /* Everything else is a stuck error. Should not happen if e is well-typed.
